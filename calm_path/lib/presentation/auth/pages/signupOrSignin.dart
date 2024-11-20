@@ -3,6 +3,7 @@ import 'package:calm_path/common/widgets/button/basic_app_button.dart';
 import 'package:calm_path/core/configs/assets/app_images.dart';
 import 'package:calm_path/core/configs/assets/app_vectors.dart';
 import 'package:calm_path/core/configs/theme/app_colors.dart';
+import 'package:calm_path/presentation/auth/pages/signin.dart';
 import 'package:calm_path/presentation/auth/pages/signup.dart';
 import 'package:flutter/material.dart';
 
@@ -77,6 +78,11 @@ class Signuporsignin extends StatelessWidget {
                   Expanded(
                   child: TextButton(
                     onPressed: (){
+                      Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (BuildContext contex)=>const Signin()
+                          ),
+                          );
                       
                     }, 
                     child: const Text(

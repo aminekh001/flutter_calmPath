@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "1049807678475",
+    "project_id": "calm-e4483",
+    "storage_bucket": "calm-e4483.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049807678475:android:d38e53619ce2d69ebe6b0e",
+        "android_client_info": {
+          "package_name": "com.cp.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmrW-QcEzd44qJokNTk41LHCHN375KHQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1049807678475-7p4flhl0smumfnq6cljn124mcgmjhccb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.calm"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049807678475:android:a74c6b3891f8915dbe6b0e",
+        "android_client_info": {
+          "package_name": "com.example.calm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049807678475-1ci2migogotvb4i05icr49fepjoh59qn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.calm",
+            "certificate_hash": "f36333b6e3846fc154aa56401d4a23efbcdafc14"
+          }
+        },
+        {
+          "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmrW-QcEzd44qJokNTk41LHCHN375KHQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1049807678475-7p4flhl0smumfnq6cljn124mcgmjhccb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.calm"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
