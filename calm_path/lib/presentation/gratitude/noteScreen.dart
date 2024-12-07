@@ -1,9 +1,13 @@
+import 'dart:convert'; // Import for Base64 encoding/decoding
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:calm_path/core/configs/theme/app_colors.dart';
 import 'package:calm_path/core/configs/theme/color_palette.dart';
+import 'package:intl/intl.dart';
+import 'package:calm_path/common/widgets/app_bar/app_bar.dart';
 
 class NotesScreen extends StatefulWidget {
   final String? entryId;
@@ -16,43 +20,79 @@ class NotesScreen extends StatefulWidget {
 
 class _NotesScreenState extends State<NotesScreen> {
   final _noteController = TextEditingController();
-  Color _selectedColor = AppColors.lightBackground; // Default background color
+  Color _selectedColor = ColorPalette.colors.last; // Default to blue
   final _journalRef = FirebaseDatabase.instance.ref("gratitude_journal");
   File? _selectedImage; // Store the selected photo
+  String? _base64Image; // Store Base64 encoded string for the photo
   final ImagePicker _picker = ImagePicker();
+
+  String? _creationDate;
+  String? _lastModifiedDate;
 
   @override
   void initState() {
     super.initState();
     if (widget.entryId != null) {
       _loadNote();
+    } else {
+      _initializeDates();
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (widget.entryId == null && _selectedColor == AppColors.lightBackground) {
-      _selectedColor = Theme.of(context).scaffoldBackgroundColor;
-    }
+  void _initializeDates() {
+    final now = DateTime.now();
+    final formattedDate = _formatDateTime(now);
+    _creationDate = formattedDate;
+    _lastModifiedDate = formattedDate;
   }
 
-  void _loadNote() async {
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('EEEE, MMMM d yyyy HH:mm').format(dateTime);
+  }
+
+  Future<void> _loadNote() async {
     final snapshot = await _journalRef.child(widget.entryId!).get();
     if (snapshot.exists) {
       final data = snapshot.value as Map<dynamic, dynamic>;
       setState(() {
         _noteController.text = data['note'] ?? "";
         _selectedColor = Color(int.parse(data['color'] ?? "0xFFFFFFFF"));
+        _creationDate = data['creationDate'] ?? "";
+        _lastModifiedDate = data['lastModifiedDate'] ?? _creationDate;
+
+        if (data['imageBase64'] != null) {
+          _base64Image = data['imageBase64'];
+          _selectedImage = null;
+        } else {
+          _base64Image = null;
+        }
       });
     }
   }
 
-  void _saveNote() async {
+  Future<void> _saveNote() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final now = DateTime.now();
+
+    if (_selectedImage != null) {
+      _base64Image = base64Encode(await _selectedImage!.readAsBytes());
+    }
+
+    if (widget.entryId == null) {
+      _initializeDates();
+    } else {
+      _lastModifiedDate = _formatDateTime(now); // Update last modified date
+    }
+
     final noteData = {
-      'date': DateTime.now().toIso8601String(),
+      'uid': user.uid,
+      'creationDate': _creationDate,
+      'lastModifiedDate': _lastModifiedDate,
       'note': _noteController.text,
       'color': _selectedColor.value.toString(),
+      'imageBase64': _base64Image,
     };
 
     if (widget.entryId == null) {
@@ -64,25 +104,27 @@ class _NotesScreenState extends State<NotesScreen> {
     Navigator.pop(context);
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _base64Image = null;
       });
     }
   }
 
-  Future<void> _takePhoto() async {
+  Future<void> _takePhotoWithCamera() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _base64Image = null;
       });
     }
   }
 
-  void _showPhotoOptions() {
+  void _showOverflowMenu() {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -90,19 +132,27 @@ class _NotesScreenState extends State<NotesScreen> {
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("Choose from Gallery"),
+                leading: const Icon(Icons.color_lens),
+                title: const Text("Pick Color"),
                 onTap: () {
                   Navigator.pop(context);
-                  _pickImage();
+                  _showColorPicker();
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text("Take a Photo"),
+                title: const Text("Add Picture"),
                 onTap: () {
                   Navigator.pop(context);
-                  _takePhoto();
+                  _showPhotoOptions();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.lightbulb),
+                title: const Text("Ideas"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showGratitudeIdeas();
                 },
               ),
             ],
@@ -146,15 +196,45 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
+  void _showPhotoOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("Choose from Gallery"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("Take a Photo"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhotoWithCamera();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showGratitudeIdeas() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text("Things to be Grateful For"),
-          content: Column(
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               ListTile(
                 leading: Icon(Icons.favorite, color: Colors.red),
                 title: Text("Family and Friends"),
@@ -190,97 +270,73 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom; // Keyboard padding
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.entryId == null ? "New Note" : "Edit Note",
-          style: const TextStyle(fontFamily: 'Satoshi'),
-        ),
-        backgroundColor: _selectedColor,
+      appBar: BasicAppBar(
+
+        title: Text(_lastModifiedDate ?? "New Note"),
+        backgroundColor: _selectedColor.withOpacity(0.6),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check, color: Colors.white),
-            onPressed: _saveNote,
-            tooltip: "Save",
+            icon: const Icon(Icons.more_vert),
+            onPressed: _showOverflowMenu,
           ),
         ],
       ),
       body: Container(
-        color: _selectedColor.withOpacity(0.8),
+        color: _selectedColor.withOpacity(0.5),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_selectedImage != null)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        height: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          image: DecorationImage(
-                            image: FileImage(_selectedImage!),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    TextField(
-                      controller: _noteController,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                        hintText:
-                            "I am so happy and grateful for ____, because ____.",
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide.none, // Removes the border
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.transparent), // Transparent border
-                        ),
-                        hintStyle: TextStyle(
-                          color: AppColors.grey,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 18, fontFamily: 'Satoshi'),
-                    ),
-                  ],
+            if (_base64Image != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: MemoryImage(base64Decode(_base64Image!)),
+                    fit: BoxFit.cover,
+                  ),
                 ),
+              ),
+            if (_selectedImage != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: FileImage(_selectedImage!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: TextField(
+                controller: _noteController,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  hintText: "I am so happy and grateful for ____, because ____.",
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: AppColors.grey, fontStyle: FontStyle.italic),
+                ),
+                style: const TextStyle(fontSize: 18, fontFamily: 'Satoshi'),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: AppColors.darkGrey,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomPadding), // Adjust to keyboard
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.color_lens, color: Colors.white),
-                onPressed: _showColorPicker,
-                tooltip: "Pick Color",
-              ),
-              IconButton(
-                icon: const Icon(Icons.lightbulb, color: Colors.white),
-                onPressed: _showGratitudeIdeas,
-                tooltip: "Ideas",
-              ),
-              IconButton(
-                icon: const Icon(Icons.camera_alt, color: Colors.white),
-                onPressed: _showPhotoOptions,
-                tooltip: "Add Photo",
-              ),
-            ],
+      floatingActionButton: ElevatedButton(
+        onPressed: _saveNote,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
+          backgroundColor: AppColors.primary,
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          child: Text("Save", style: TextStyle(color: Colors.white, fontSize: 18)),
         ),
       ),
     );

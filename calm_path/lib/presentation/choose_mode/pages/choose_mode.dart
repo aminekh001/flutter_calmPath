@@ -16,159 +16,135 @@ class ChooseModePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: Stack(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 70,
-              horizontal: 40
-            ),
-            decoration:  BoxDecoration(
-              
+            padding: const EdgeInsets.symmetric(vertical: 70, horizontal: 40),
+            decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage(
-                  AppImages.choosemode,
-                ),
+                image: const AssetImage(AppImages.choosemode),
                 fit: BoxFit.fill,
                 colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.4), // Add opacity to the image only
-                BlendMode.dstATop,
+                  Colors.black.withOpacity(0.4), // Add opacity to the image only
+                  BlendMode.dstATop,
                 ),
-              )
+              ),
             ),
             child: Column(
               children: [
                 Align(
                   alignment: Alignment.topCenter,
-                
-                 child:  Image.asset(
-                  AppVectors.logoH
-                ),
+                  child: Image.asset(AppVectors.logoH),
                 ),
                 const Spacer(),
                 const Text(
-                  'Chose Mode',
+                  'Choose Mode', // Corrected typo
                   style: TextStyle(
-                    fontWeight:  FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    fontSize: 17
+                    fontSize: 17,
                   ),
                 ),
-                const SizedBox(height:40,),
+                const SizedBox(height: 40),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Column(
-                    children: [
-                      GestureDetector(
-                      onTap: (){
-                        context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
-                      },
-                       child:  ClipOval(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10,sigmaY: 10),
-                      
-                      child:  Container(
-
-                      height:80,
-                      width: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xff30393c).withOpacity(0.5),
-                        shape: BoxShape.circle
-                      ),
-                      child: SvgPicture.asset(
-                        AppVectors.moon,
-                        fit: BoxFit.none,
-                      ),
-                      ),
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Switched to Dark Mode')),
+                            );
+                          },
+                          child: ClipOval(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                height: 80,
+                                width: 80,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff30393c).withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: SvgPicture.asset(
+                                  AppVectors.moon,
+                                  fit: BoxFit.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'Dark Mode',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            color: AppColors.grey,
+                          ),
+                        ),
+                      ],
                     ),
-                    ),
-                    ),
-                    const SizedBox(width: 15,),
-                    const Text(
-                      'Dark Mode',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: AppColors.grey
-                      ),
-                    )
-
-                    ],
-                    ),
-
-                    const SizedBox(width: 40,),
-                     
+                    const SizedBox(width: 40),
                     Column(
-                    children: [
-
-                      GestureDetector(
-                        onTap: (){
-                          context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
-
-                        },
-                     child:  ClipOval(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10,sigmaY: 10),
-                      
-                      child:  Container(
-
-                      height:80,
-                      width: 80,
-                      decoration:  BoxDecoration(
-                        color: const Color(0xff30393c).withOpacity(0.5),
-                        shape: BoxShape.circle
-                      ),
-                      child: SvgPicture.asset(
-                        AppVectors.sun,
-                        fit: BoxFit.none,
-                      ),
-                      ),
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            context.read<ThemeCubit>().updateTheme(ThemeMode.light);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Switched to Light Mode')),
+                            );
+                          },
+                          child: ClipOval(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                height: 80,
+                                width: 80,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff30393c).withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: SvgPicture.asset(
+                                  AppVectors.sun,
+                                  fit: BoxFit.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'Light Mode',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            color: AppColors.grey,
+                          ),
+                        ),
+                      ],
                     ),
-                    ),
-                    
-                    ),
-                    const SizedBox(width: 15,),
-                    const Text(
-                      'Light Mode',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: AppColors.grey
-                      ),
-                    )
-
-                    ],
-                    ),
-
                   ],
-                  ),
-                
-                const SizedBox(height: 50,),
+                ),
+                const SizedBox(height: 50),
                 BasicButton(
-                  onPressed: (){
-
-                  
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (BuildContext context ) => const Signuporsignin()
-                      )
-                  ) ;
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => const Signuporsignin(),
+                      ),
+                    );
                   },
-                  title: 'Continue'
-                  )
+                  title: 'Continue',
+                ),
               ],
             ),
           ),
-  
-         
-
         ],
       ),
-    
-
     );
   }
 }

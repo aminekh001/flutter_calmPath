@@ -1,25 +1,29 @@
 import 'package:calm_path/common/widgets/app_bar/app_bar.dart';
 import 'package:calm_path/common/widgets/button/basic_app_button.dart';
 import 'package:calm_path/core/configs/assets/app_vectors.dart';
+import 'package:calm_path/core/configs/assets/app_images.dart';
 import 'package:calm_path/core/configs/theme/app_colors.dart';
 import 'package:calm_path/presentation/auth/pages/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:calm_path/presentation/intro/pages/home.dart';
 
 class Signin extends StatefulWidget {
-  const Signin({super.key});
-
   @override
   _SigninState createState() => _SigninState();
 }
 
 class _SigninState extends State<Signin> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Validate email and password
+  bool _isLoading = false;
+  String? _errorMessage;
+
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter an email';
@@ -35,48 +39,172 @@ class _SigninState extends State<Signin> {
     if (value == null || value.isEmpty) {
       return 'Please enter a password';
     }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
     return null;
   }
 
-  // Google Sign-In method
-  Future<void> _signInWithGoogle() async {
+  Future<void> _loginWithEmailPassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? account = await googleSignIn.signIn();
-      if (account != null) {
-        print('Google Sign-In successful: ${account.email}');
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final User? user = userCredential.user;
+
+      if (user != null && !user.emailVerified) {
+        _showEmailNotVerifiedDialog(user);
+      } else {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('email', _emailController.text.trim());
+        await prefs.setBool('isLoggedIn', true);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login successful!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
       }
     } catch (error) {
-      print('Google Sign-In failed: $error');
+      setState(() {
+        _errorMessage = error.toString();
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google Sign-In failed')),
+        SnackBar(
+          content: Text("Login failed: $_errorMessage"),
+          backgroundColor: Colors.red,
+        ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  // Apple Sign-In method
-  Future<void> _signInWithApple() async {
+  Future<void> _forgotPassword() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter your email to reset your password."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     try {
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
+      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Password Reset Email Sent"),
+            content: const Text("Please check your email for the password reset link."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
       );
-      print('Apple Sign-In successful: ${credential.email}');
     } catch (error) {
-      print('Apple Sign-In failed: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Apple Sign-In failed')),
+        SnackBar(
+          content: Text("Failed to send password reset email: $error"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
-  // Handle form submission
-  void _submitForm() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Form is valid, proceed with submission (e.g., API call)
-      print('Form submitted with email: ${_emailController.text} and password: ${_passwordController.text}');
+  void _showEmailNotVerifiedDialog(User user) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Email Not Verified"),
+          content: const Text(
+            "Your email is not verified. Please check your email inbox for the verification link.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                try {
+                  await user.sendEmailVerification();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Verification email resent!"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Failed to resend verification email: $error"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Resend Verification Email"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await _auth.signInWithCredential(credential);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Google Sign-In successful!"), backgroundColor: Colors.green),
+      );
+
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google Sign-In failed: $error"), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -91,106 +219,72 @@ class _SigninState extends State<Signin> {
           width: 100,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 30),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _registerText(),
-              const SizedBox(height: 50),
-              _emailField(context),
-              const SizedBox(height: 20),
-              _passwordField(context),
-              const SizedBox(height: 50),
-              BasicButton(
-                onPressed: _submitForm,
-                title: 'Sign In',
-              ),
-              const SizedBox(height: 20),
-              Center(
+      body: Stack(
+        children: [
+          const Align(
+            alignment: Alignment.topLeft,
+            child: Image(
+              image: AssetImage(AppImages.login),
+            ),
+          ),
+          Positioned.fill(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Google Sign-In Button
+                    _registerText(),
+                    const SizedBox(height: 305),
+                    Form(
+  key: _formKey,
+  child: Column(
+    children: [
+      _emailField(context),
+      const SizedBox(height: 10),
+      _passwordField(context),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end, // Aligns the button to the right
+        children: [
+          TextButton(
+            onPressed: _forgotPassword,
+            child: const Text(
+              "Forgot Password?",
+              style: TextStyle(
+                color: Colors.green, // Set the text color to blue
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      if (_isLoading)
+        const CircularProgressIndicator()
+      else
+        BasicButton(
+          onPressed: _loginWithEmailPassword,
+          title: 'Sign In',
+        ),
+    ],
+  ),
+),
+
+                    const SizedBox(height: 10),
                     GestureDetector(
                       onTap: _signInWithGoogle,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal:30),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/images/google_icon.png', // Your Google icon path
-                              height: 24,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Sign in with Google',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Apple Sign-In Button
-                    GestureDetector(
-                      onTap: _signInWithApple,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 40),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/images/apple_icon.png', // Your Apple icon path
-                              height: 24,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Sign in with Apple',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Color.fromARGB(255, 255, 255, 255),
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: _buildSocialButton(
+                        iconPath: 'assets/images/google_icon.png',
+                        text: 'Sign in with Google',
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black,
                       ),
                     ),
                   ],
                 ),
-              )
-            ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -212,7 +306,7 @@ class _SigninState extends State<Signin> {
       decoration: const InputDecoration(
         hintText: 'Email',
         hintStyle: TextStyle(
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
       ).applyDefaults(Theme.of(context).inputDecorationTheme),
@@ -227,7 +321,7 @@ class _SigninState extends State<Signin> {
       decoration: const InputDecoration(
         hintText: 'Password',
         hintStyle: TextStyle(
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
       ).applyDefaults(Theme.of(context).inputDecorationTheme),
@@ -237,7 +331,7 @@ class _SigninState extends State<Signin> {
 
   Widget _signInText(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 30),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -249,9 +343,7 @@ class _SigninState extends State<Signin> {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (BuildContext context) => const Signup(),
-                ),
+                MaterialPageRoute(builder: (context) => const Signup()),
               );
             },
             child: const Text(
@@ -261,6 +353,39 @@ class _SigninState extends State<Signin> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String iconPath,
+    required String text,
+    required Color backgroundColor,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(iconPath, height: 24),
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: TextStyle(fontSize: 20, color: textColor),
           ),
         ],
       ),

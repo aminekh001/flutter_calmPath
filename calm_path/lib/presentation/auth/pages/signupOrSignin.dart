@@ -16,92 +16,91 @@ class Signuporsignin extends StatelessWidget {
       body: Stack(
         children: [
           const BasicAppBar(),
-          const Align(
-            alignment: Alignment.bottomLeft,
-            child: Image(
-              image: AssetImage(AppImages.login),
-                // Set width in pixels
-              
-              ),
-          ),
-   
-        
           Align(
-            alignment: Alignment.center,
+            alignment: Alignment.bottomCenter,
             child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 40,
-            
-            ), 
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-               const Image(
-              image: AssetImage(AppVectors.logoH),
-             
-                ),
-                const SizedBox(height: 30,),
-              const Text(
-                'strive to improve every day',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  color: AppColors.grey
-                ),
+              padding: const EdgeInsets.only(bottom: 20), // Push the image slightly up
+              child: const Image(
+                image: AssetImage(AppImages.come),
+
+                fit: BoxFit.contain,
               ),
-                              const SizedBox(height: 10,),
-              const Text(
-                'Thryve is a stress relief app designed to bring happiness and promote wellness in your daily life',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                  color: AppColors.grey
-                ),
-              ),
-              const SizedBox(height: 30,),
-              Row(
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    flex: 1,
-                    child: BasicButton(
-                      onPressed: (){
-                        Navigator.push(
-                          context, 
-                          MaterialPageRoute(builder: (BuildContext contex)=>const Signup()
-                          ),
-                          );
-                      },
-                       title: 'Sign up'),
+                  const Image(
+                    image: AssetImage(AppVectors.logoH),
+                    height: 100,
                   ),
-                  const SizedBox(width: 5,),
-                  Expanded(
-                  child: TextButton(
-                    onPressed: (){
-                      Navigator.push(
-                          context, 
-                          MaterialPageRoute(builder: (BuildContext contex)=>const Signin()
+                  const SizedBox(height: 30),
+                  const Text(
+                    'thrive to improve every day',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      color: AppColors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Thryve is a stress relief app designed to bring happiness and promote wellness in your daily life',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      color: AppColors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: BasicButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext contex) => const Signup(),
+                              ),
+                            );
+                          },
+                          title: 'Sign up',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext contex) => Signin(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Sign in',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.white,
+                            ),
                           ),
-                          );
-                      
-                    }, 
-                    child: const Text(
-                      'Sign in',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white
-                      ) ,
-                    )
-                    )
-                  )
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              ],
-
-            )
-          )
-          )
+            ),
+          ),
         ],
       ),
     );

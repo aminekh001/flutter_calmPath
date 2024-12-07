@@ -4,11 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:calm_path/core/configs/theme/app_theme.dart';
+import 'package:calm_path/presentation/splash/pages/splash.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:firebase_database/firebase_database.dart'; // Firebase Realtime Database
-import 'package:calm_path/presentation/gratitude/gratList.dart'; // Import Gratitude List Screen
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,9 +24,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Firebase Realtime Database Initialization
-  final database = FirebaseDatabase.instance;
-  final journalRef = database.ref("gratitude_journal"); // Reference for gratitude journal
 
   runApp(const MyApp());
 }
@@ -35,6 +31,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -48,7 +45,7 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: mode,
           debugShowCheckedModeBanner: false,
-          home: GratitudeListScreen(), // Set Gratitude List Screen as the home screen
+          home: const SplashPage(),
         ),
       ),
     );
