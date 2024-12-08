@@ -75,7 +75,7 @@ class _SigninState extends State<Signin> {
           ),
         );
 
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
       }
     } catch (error) {
       setState(() {
@@ -198,7 +198,7 @@ class _SigninState extends State<Signin> {
         const SnackBar(content: Text("Google Sign-In successful!"), backgroundColor: Colors.green),
       );
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google Sign-In failed: $error"), backgroundColor: Colors.red),

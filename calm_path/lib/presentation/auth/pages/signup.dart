@@ -23,7 +23,6 @@ class _SignupState extends State<Signup> {
 
   bool _isLoading = false;
   bool _isResendLoading = false;
-  bool _isVerifying = true;
 
   Future<void> _registerUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -40,6 +39,12 @@ class _SignupState extends State<Signup> {
       );
 
       final user = userCredential.user;
+
+      // Update the displayName with the full name (username)
+      if (user != null) {
+        await user.updateDisplayName(_fullNameController.text.trim());
+        await user.reload(); // Reload user to ensure updates reflect
+      }
 
       // Send email verification
       if (user != null && !user.emailVerified) {
@@ -123,7 +128,7 @@ class _SignupState extends State<Signup> {
     Navigator.pop(context); // Close the dialog
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) =>  Signin()),
+      MaterialPageRoute(builder: (context) => Signin()),
     );
   }
 

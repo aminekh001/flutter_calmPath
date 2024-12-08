@@ -225,7 +225,7 @@ class _GratitudeListScreenState extends State<GratitudeListScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Icon(Icons.volunteer_activism, color: Colors.white),
+                                const Icon(Icons.favorite, color: Colors.white),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [

@@ -20,7 +20,7 @@ class NotesScreen extends StatefulWidget {
 
 class _NotesScreenState extends State<NotesScreen> {
   final _noteController = TextEditingController();
-  Color _selectedColor = ColorPalette.colors.last; // Default to blue
+  Color _selectedColor = ColorPalette.colors.first;
   final _journalRef = FirebaseDatabase.instance.ref("gratitude_journal");
   File? _selectedImage; // Store the selected photo
   String? _base64Image; // Store Base64 encoded string for the photo
