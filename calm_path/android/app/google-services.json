@@ -7,12 +7,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1049807678475:android:d38e53619ce2d69ebe6b0e",
+        "mobilesdk_app_id": "1:1049807678475:android:a74c6b3891f8915dbe6b0e",
         "android_client_info": {
-          "package_name": "com.cp.app"
+          "package_name": "com.example.calm"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1049807678475-1ci2migogotvb4i05icr49fepjoh59qn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.calm",
+            "certificate_hash": "f36333b6e3846fc154aa56401d4a23efbcdafc14"
+          }
+        },
         {
           "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
           "client_type": 3
@@ -43,20 +51,12 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1049807678475:android:a74c6b3891f8915dbe6b0e",
+        "mobilesdk_app_id": "1:1049807678475:android:10c8807afa8e6f6cbe6b0e",
         "android_client_info": {
-          "package_name": "com.example.calm"
+          "package_name": "com.example.calm_path"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "1049807678475-1ci2migogotvb4i05icr49fepjoh59qn.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.calm",
-            "certificate_hash": "f36333b6e3846fc154aa56401d4a23efbcdafc14"
-          }
-        },
         {
           "client_id": "1049807678475-8fair13ceb23kl2djeej1v57cre0bgcm.apps.googleusercontent.com",
           "client_type": 3

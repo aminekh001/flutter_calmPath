@@ -11,14 +11,20 @@ import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize HydratedBloc Storage
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: kIsWeb
         ? HydratedStorage.webStorageDirectory
         : await getApplicationDocumentsDirectory(),
   );
+
+  // Initialize Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
+
   runApp(const MyApp());
 }
 
@@ -30,21 +36,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create:(_) =>ThemeCubit())
-
-      ], 
-      child: BlocBuilder<ThemeCubit,ThemeMode>(
-
-      builder:(context,mode)=> MaterialApp(
-      title: 'Flutter Demo',
-      theme: AppTheme.darkTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: mode,
-      debugShowCheckedModeBanner: false,
-      home: const SplashPage()
-    ),
-    ),
+        BlocProvider(create: (_) => ThemeCubit()),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, mode) => MaterialApp(
+          title: 'Flutter Demo',
+          theme: AppTheme.darkTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: mode,
+          debugShowCheckedModeBanner: false,
+          home: const SplashPage(),
+        ),
+      ),
     );
   }
 }
-
